@@ -8,14 +8,12 @@ This repository provides code for identifying, storing, and retrieving musical m
 
 ## Anthology style Listings
 
-Examples of extracted lists using the above code, as explained on [FourScoreandMore.org](https://fourscoreandmore.org/moments/).
+Examples of lists, including those using the [scoreSVs.py](/scoreSVs.py) code, as explained on [FourScoreandMore.org](https://fourscoreandmore.org/moments/).
 
 |Corpus|Augmented Triads|Augmented Sixths|Neapolitan Sixths|L and P relations|Mixed Metre|
 |---|---|---|---|---|---|
-|Existing anthologies (various repertoire)|||||N/A|
-|New collections (various repertoire)||||||
-|Scores of Scores Lieder Corpus|||||'Le Colibri' only|
-|Bach Chorales|||||N/A|
-|Beethoven String Quartets|||||N/A|
-
-[Lists coming soon]
+|Existing anthologies (various repertoire)|-|[X](/Anthology_Lists/Augmented_6ths/Compiled.csv)|[X](/Anthology_Lists/Neapolitan/Compiled.csv)|-|-|
+|New collections (various repertoire)|[X](/Anthology_Lists/Augmented/Newly_Prepared.csv)|-|-|-|[X](/Anthology_Lists/Mixed_Metre/Newly_Prepared.csv)|
+|Scores of Scores Lieder Corpus|[X](/Anthology_Lists/Augmented/Lieder_Sample.csv)|[X](/Anthology_Lists/Augmented_6ths/Lieder_Sample.csv)|[X](/Anthology_Lists/Neapolitan/)|[X](/Anthology_Lists/L_and_P/Lieder_Sample.csv)|'Le Colibri' only|
+|Bach Chorales|[X](/Anthology_Lists/Augmented/Bach_Chorales.csv)|-|-|-|-|
+|Beethoven String Quartets|[X](/Anthology_Lists/Augmented/Beethoven_Quartets)|-|-|-|-|
