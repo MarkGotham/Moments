@@ -1,7 +1,24 @@
 '''
-About:
+===============================
+SCORE SVs (scoreSVs.py)
+===============================
 
-This file provides code for
+Mark Gotham, 2019-20, for Cornell University and fourscoreandmore.org
+
+
+LICENCE:
+===============================
+
+Creative Commons Attribution-NonCommercial 4.0 International License.
+https://creativecommons.org/licenses/by-nc/4.0/
+
+Please feel free to use this resource, acknowledging this source.
+
+
+ABOUT:
+===============================
+
+Code for:
 - extracting 'slices' of chord and rest info from scores,
 - writing that summative information to a separated values file,
 - retreiving such information from such a separated values file, and
@@ -14,10 +31,9 @@ Differences include:
 - more temporal information than YCAC could derive (due to working with MIDI):
 measure, beat (metrical position), beat strength, and length.
 
-Possible TODO:
-- the option for evenly spaced slices (useful for vector representations in machine learning tasks).
+TODO:
+- more tests for all options and routes
 
-To use this in public-facing projects, please acknowledge this source.
 '''
 
 from music21 import common
@@ -28,6 +44,7 @@ from music21 import converter
 
 from fractions import Fraction
 from collections import Counter
+from copy import deepcopy
 from itertools import combinations
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,7 +57,7 @@ import unittest
 
 class TableEntry(object):
     '''
-    Defines the data to be retrieved stored, and assessed for each chord 'slice':
+    Defines the data to be retrieved, stored, and assessed for each chord 'slice':
 
     measure = measure number in the piece overall, starting with 1, or 0 in the cases of incomplete first measures;
     beat = the beat in the measure always starting with 1 (NB not 0), whatever the time signature);
@@ -74,25 +91,7 @@ class ScoreInfoSV:
 
     def __init__(self, score):
         self.score = score
-        self.svFileName = ''
-        self.name()
-        self.data = self.extractData()
-
-
-    def name(self):
-        '''
-        Names the sv file based on any available metadata.
-        '''
-
-        metadata = [x[1] for x in self.score.metadata.all()]  # Values
-        if metadata == []:
-            self.svFileName = 'UNNAMED_SV_FILE.tsv'
-        else:
-            svFileName = '_'.join(metadata)
-            svFileName = svFileName.replace('.mxl', '')
-            svFileName = svFileName.replace('.', '-')
-            svFileName = svFileName.replace(' ', '_')
-            self.svFileName = svFileName+'.tsv'
+        self.extractData()
 
 
     def extractData(self):
@@ -101,7 +100,7 @@ class ScoreInfoSV:
         '''
 
         chordScore = self.score.chordify()
-        info = []
+        self.data = []
 
         for x in chordScore.recurse():
 
@@ -121,18 +120,52 @@ class ScoreInfoSV:
                     thisEntry.primeForm = x.primeForm
                     thisEntry.normalOrder = x.normalOrder
 
-                info.append(thisEntry)
-
-        return info
+                self.data.append(thisEntry)
 
 
-    def makeSV(self, svFilePath):
+    def name(self):
         '''
-        Writes the separated values file (TSV rather than CSV here).
+        Names the sv file based on any available metadata.
         '''
 
-        with open(svFilePath+self.svFileName, 'w') as svfile:
-            svOut = csv.writer(svfile, delimiter='\t',
+        self.svFileName = ''
+
+        metadata = [x[1] for x in self.score.metadata.all()]  # Values
+        if metadata == []:
+            self.svFileName = 'UNNAMED_SV_FILE'
+        else:
+            svFileName = '_'.join(metadata)
+            svFileName = svFileName.replace('.mxl', '')
+            svFileName = svFileName.replace('.', '-')
+            svFileName = svFileName.replace(' ', '_')
+            self.svFileName = svFileName
+
+
+    def makeSV(self, svFilePath=None, svFileName=None, delimiter='\t'):
+        '''
+        Writes the separated values file (TSV by default).
+        '''
+
+        if not svFilePath:
+            svFilePath = './'
+
+        if delimiter == '\t':
+            extn = '.tsv'
+        elif delimiter == ',':
+            extn = '.csv'
+        else:
+            message = f'Delimiter (currently {delimiter}) must be either '
+            message += '\'\t\' (for .tsv) or '
+            message += '\',\' (for .csv).'
+            raise ValueError(message)
+
+        if svFileName:
+            self.svFileName = svFileName
+        else:
+            self.name()
+
+        with open(f'{svFilePath}{self.svFileName}{extn}', 'w') as svfile:
+            svOut = csv.writer(svfile, delimiter=delimiter,
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
             for entry in self.data:
@@ -155,38 +188,39 @@ class SVInfo:
 
 
     def __init__(self, svPath):
-        self.svPath = svPath
-        self.data = self.parseSV()
 
+        self.inPath, self.fileName = os.path.split(svPath)
+
+        self.parseSV()
+        self.getPrimes()
+        self.getNormals()
 
     def parseSV(self):
         '''
-        Takes an SV file and returns the data.
+        Parses an SV file.
         '''
 
-        file = self.svPath
+        file = f'{self.inPath}/{self.fileName}'
 
         f = open(file, 'r')
 
-        data = []
+        self.data = []
 
         for row_num, line in enumerate(f):
             values = line.split('\t')
             thisEntry = TableEntry()
             thisEntry.measure = int(values[0])
-            thisEntry.beat = float(values[1])
-            thisEntry.beatStrength = float(values[2])
-            thisEntry.length = float(values[3])
-            thisEntry.pitches = str(values[4])
-            thisEntry.intervals = str(values[5])
-            thisEntry.primeForm = str(values[6])
-            thisEntry.normalOrder = str(values[7][:-1])
+            thisEntry.beat = strToFloat(values[1])
+            thisEntry.beatStrength = float(values[2])  # Shouldn't need strToFloat() here
+            thisEntry.length = strToFloat(values[3])
+            thisEntry.pitches = values[4][2:-2].split('\', \'')
+            thisEntry.intervals = values[5][2:-2].split('\', \'')
+            thisEntry.primeForm = values[6]  # TODO: leave as is?
+            thisEntry.normalOrder = values[7][:-1]
 
-            data.append(thisEntry)
+            self.data.append(thisEntry)
 
         f.close()
-
-        return data
 
 
     def setsOfType(self, chordType='[0, 4, 8]', weighted=False, measures=True):
@@ -243,22 +277,20 @@ class SVInfo:
             return round(count, 3)
 
 
-    def getAllPrimes(self):
+    def getPrimes(self):
         '''
         Retrieves all prime forms in a file for subsequent comparisons.
         '''
 
         self.primes = [entry.primeForm for entry in self.data]
-        return self.primes
 
 
-    def getAllNormals(self):
+    def getNormals(self):
         '''
         Retrieves all normal orders in a file for subsequent comparisons.
         '''
 
         self.normals = [entry.normalOrder for entry in self.data]
-        return self.normals
 
 
     def compareAllPrimes(self,
@@ -273,10 +305,7 @@ class SVInfo:
 
         overallInfo = []
 
-        self.getAllPrimes()
-        primeList = self.primes
-
-        total = len(primeList)
+        total = len(self.primes)
 
         hitList = []
         if 'major' in triadsOfInterest:
@@ -292,19 +321,19 @@ class SVInfo:
             # TODO: generalise wider than triads; accept any prime?
         if hitList == []:
             optionsList = ['major', 'minor', 'diminished', 'augmented', 'triads']
-            raise ValueError("Please chose one or more triad types: "+[x for x in optionsList])
+            raise ValueError(f'Please chose one or more triad types: {optionsList}')
 
         if Counts:
             currentTuple = ('Overall', total)
             overallInfo.append(currentTuple)
         for triad in hitList:
-            currentCount = primeList.count(triad)
+            currentCount = self.primes.count(triad)
             if Counts:
-                currentName = triad+' Count'
+                currentName = triad + ' Count'
                 currentTuple = (currentName, currentCount)
                 overallInfo.append(currentTuple)
             if Proportions:
-                currentName = triad+' Proportion'
+                currentName = triad + ' Proportion'
                 currentTuple = (currentName, currentCount/total)
                 overallInfo.append(currentTuple)
 
@@ -313,26 +342,21 @@ class SVInfo:
 
     def followChord(self,
                     targetChord = '[0, 4, 8]',
-                    histogram=False,
                     howMany=15,
                     ignoreFirst=False):
         '''
         Get data for the chords which follow an input target chord of interest.
-        Optionally, return a histogram for the most common.
         '''
-
-        self.getAllPrimes()
-        pcs = self.primes
 
         # Get position info for targetChord
         positions = []
-        for i in [i for i,x in enumerate(pcs) if x == targetChord]:
+        for i in [i for i,x in enumerate(self.primes) if x == targetChord]:
             positions.append(i)
 
         # Retrieve following chord
         following = []
         for p in positions:
-            following.append(pcs[p+1])
+            following.append(self.primes[p + 1])
 
         fullCount = Counter(following)
 
@@ -342,27 +366,106 @@ class SVInfo:
             start=0
 
         if len(fullCount) > howMany:
-            count = fullCount.most_common()[start:howMany:1]
+            self.followCount = fullCount.most_common()[start:howMany]
         else:
-            count = fullCount.most_common()[start:]
+            self.followCount = fullCount.most_common()[start:]
 
-        if histogram==False:
-            return count
+    def followCountHistogram(self, outPath=None, fileName=None):
+        '''
+        Get data for the chords which follow an input target chord of interest.
+        Returns a histogram for whatever data has been
+        assigned to self.followCount
+        by self.followChord().
+        '''
+
+        labels, values = zip(*self.followCount)
+        indexes = np.arange(len(labels))
+        width = 0.5
+
+        plt.bar(indexes, values, width)
+        plt.title("Chord usage",fontsize=16)
+        plt.xlabel("Chord type", fontsize=12)
+        plt.ylabel("Count", fontsize=12)
+        plt.xticks(indexes + width*0.5, labels, rotation=90)
+        plt.xticks(indexes, labels, rotation=90)
+        plt.gcf().subplots_adjust(bottom=0.25)
+
+        if not outPath:
+            outPath = self.inPath
+        if not fileName:
+            fileName = self.fileName
+        plt.savefig(f'{outPath + fileName}.png', facecolor='w', edgecolor='w', format='png')
+
+    def evenSlices(self, sliceWidth='auto'):
+        '''
+        Adapts the input SVs file data into a list of entries with slices of equal length.
+        That length given by the shortest slice width in the data unless specified otherwise.
+        Useful for certain machine learning tasks.
+        '''
+        # TODO: replace length with strength. Much more generalisable.
+        # TODO: same process but need to associate strength with length
+
+        self.evenSliceList = []
+
+        sliceWidthOptions = [0.625, 0.125, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0]
+
+        if sliceWidth == 'auto':
+            lengths = [entry.length for entry in self.data]
+            if min(lengths) in sliceWidthOptions:
+                sliceWidth = min(lengths)
+            else:
+                raise ValueError(f'Cannot work with the min slice width here ({sliceWidth}). '  +
+                                    f'Please choose manually one from of {sliceWidthOptions}.')
+
         else:
-            labels, values = zip(*count)
-            indexes = np.arange(len(labels))
-            width = 0.5
-            ##Plot
-            plt.bar(indexes, values, width)
-            plt.title("Chord usage",fontsize=16)
-            plt.xlabel("Chord type", fontsize=12)
-            plt.ylabel("Count", fontsize=12)
-            plt.xticks(indexes + width*0.5, labels, rotation=90)
-            plt.xticks(indexes, labels, rotation=90)
-            plt.gcf().subplots_adjust(bottom=0.25)
-            plt.savefig('Next.png', facecolor='w', edgecolor='w', format='png')
-            return count
-            return plt
+            if (type(sliceWidth) not in [float, int]):
+                if sliceWidth not in sliceWidthOptions:
+                    raise ValueError(f'Cannot work with the slice width here {sliceWidth}. '  +
+                                    f'Please choose manually one from of {sliceWidthOptions}.')
+
+        for index in range(len(self.data)):
+
+            entry = self.data[index]
+
+            if entry.length > sliceWidth:
+                multiplier = int(entry.length / sliceWidth)
+                splitList = split(entry, multiplier)
+                self.evenSliceList += splitList
+            elif entry.length == sliceWidth:
+                self.evenSliceList.append(entry)
+            elif entry.length < sliceWidth:
+                self.evenSliceList.append(entry)  # Put it in, ignore following
+                count = entry.length
+                while count < sliceWidth:
+                    for entry in self.data[index:]:
+                        count += entry.length
+                        index += 1
+                        # TODO: doesn't deal with syncopation
+
+    def writeEvenMIDI(self, outPath=None, fileName=None):
+        '''
+        Writes a representation of the data with:
+        - equal-width slices (handled by evenSlices, including the slice width);
+        - one row per entry (slice);
+        - whitespace-separated list of MIDI note numbers per row.
+        This is designed to make it easy to read for training certain machine learning models.
+        '''
+
+        if not outPath:
+            outPath = self.inPath
+        if not fileName:
+            fileName = self.fileName[:-4]
+        fileName = fileName.replace('.', '')
+        fileName = fileName.replace(' ', '_')
+
+        text_out = open(outPath + fileName + '.txt', "w")
+
+        for x in self.evenSliceList:
+            if x.pitches != ['']:  # Shouldn't need this. Always an empty entry, even if cutting the last one out.
+                ptchs = [pitch.Pitch(p) for p in x.pitches]
+                text_out.write(' '.join([str(p.midi) for p in ptchs]) + '\n')
+
+        text_out.close()
 
 
 # ------------------------------------------------------------------------------
@@ -383,6 +486,27 @@ def getIntervals(aChord):
     return list(dict.fromkeys(intervals))
 
 
+def split(entry, n):
+    '''
+    Split an entry into n shorter ones of 1/nth the length.
+    '''
+
+    shorterEntry = deepcopy(entry)
+    shorterEntry.length /= n
+    return [shorterEntry] * n
+
+
+def strToFloat(inString):
+    '''
+    For processing string representations of numbers back into float.
+    '''
+
+    if '/' in inString:
+        num, denom = inString.split('/')
+        return round(int(num) / int(denom), 2)
+    else:
+        return float(inString)
+
 # ------------------------------------------------------------------------------
 
 class Test(unittest.TestCase):
@@ -396,15 +520,15 @@ class Test(unittest.TestCase):
         info = ScoreInfoSV(score)
 
         self.assertIsInstance(info, ScoreInfoSV)
+        self.assertIsInstance(info.data, list)
         self.assertIsInstance(info.data[0], TableEntry)
-        self.assertEqual(info.data[0].measure, 0)
+        self.assertEqual(info.data[5].measure, 1)
 
         if write:
-            pathToDesktop = os.path.expanduser('~')+'/Desktop/'
+            pathToDesktop = os.path.expanduser('~') + '/Desktop/'
             info.makeSV(pathToDesktop)
 
-
-    def test_SVInfo(self):  # TODO: more tests for all options and routes
+    def test_SVInfo(self):
 
         svegfile = 'SV-EG-bwv269.tsv'
 
@@ -437,8 +561,13 @@ class Test(unittest.TestCase):
         self.assertEqual(allAugs[1], ('[0, 3, 6] Count', 4))
         self.assertEqual(allAugs[2], ('[0, 3, 6] Proportion', 0.05))
 
-        afterDims = info.followChord(targetChord = '[0, 3, 6]')
-        self.assertEqual(afterDims, [('[0, 3, 7]', 4)])
+        info.followChord(targetChord = '[0, 3, 6]')
+        self.assertEqual(info.followCount, [('[0, 3, 7]', 4)])
+
+        # Equal slice widths
+        info.evenSlices()
+        for x in info.evenSliceList:
+            self.assertEqual(x.length, 0.5)
 
 
     def test_getIntervals(self):
