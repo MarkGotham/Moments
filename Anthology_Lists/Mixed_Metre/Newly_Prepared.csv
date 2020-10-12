@@ -57,7 +57,7 @@ Haydn (attrib.),Piano Sonata No.12,1767?,Hob.XVI:12,Movt 3 (Finale),,"""2/4"" (7
 "Chabrier, Emmanuel",10 Pièces pittoresques,1881,,No.2 Mélancolie,"b.1-8, 15-18","""9/8"" alt. ""6/8""",3+2,[Q]=80,
 "Brahms, Johannes",Das Mädchen (song),1883–84,op.95/1,,,"""3/4, C[4/4]"" (=7/4)",3+2+2,,
 "Brahms, Johannes",Piano Trio in C minor,1886,op.101,3,,"""3/4, 2/4[x2]"" (=7/4); later ""9/8+6/8"" (=15/8).",3+2+2; 3+2,"Slow, Andante Grazioso",Three cases of deviation from the pattern: 2 x 3/4 + 4 x 2/4
-"Borodin, Alexander",Symphony No.3,1886–7,,"Movt.2, Scherzo (not the trio)",,"""5/8""",[2+3],,Brief interruptions.
+"Borodin, Alexander",Symphony No.3,1886–7,,"Movt 2, Scherzo (not the trio)",,"""5/8""",[2+3],,Brief interruptions.
 "Scriabin, Alexander",24 Preludes,1888-96,op.11 no.1,1,,"""2/2"" (actually 10/8)",5+5 [3+2+3+2],"Vivace, [C]=63-76",
 "Scriabin, Alexander",24 Preludes,1888-96,op.11 no.14,14,,"""15/8""",3+2+3+2+3+2 (ie 5/8 x 3),"Presto, 5[Q]=68-72",
 "Scriabin, Alexander",24 Preludes,1888-96,op.11 no.16,16,>,"""5/8, 4/8""",?,"Misterioso, [Q]=160-8",Alternating 5 and 4 for some sections; consistent 5/8 elsewhere.
@@ -68,7 +68,7 @@ Haydn (attrib.),Piano Sonata No.12,1767?,Hob.XVI:12,Movt 3 (Finale),,"""2/4"" (7
 "Sibelius, Jean",Six Partsongs,1893-1914***,op.18,"No.3, “Venematka”",,"""5/4""",3+2,[Briskly],Some 3/4s. Kalevala rhythm
 "Sibelius, Jean (/ Vihtol)",Laulun mahti (arr. of ballad by J. Vihtol),1895,JS 118,,b.1-16,"""3/4, 4/4""",3+2+2,Andante tranquillo,
 "Sibelius, Jean",Nine Songs for Chorus,1897,op.23,No. 2: Tuuli tuudittele,,"""5/2""",3+2,[Not too sluggishly],
-"Coleridge-Taylor, Samuel",Fantasiestücke for string quartet,1895,op.5,"Movt. 2, ""Serenade""",Two outer sections.,"""5/4""",?,Andante Molto,
+"Coleridge-Taylor, Samuel",Fantasiestücke for string quartet,1895,op.5,"Movt 2, ""Serenade""",Two outer sections.,"""5/4""",?,Andante Molto,
 "Berg, Alban",Zwei Lieder,1900 version (not 1925),,Schließe mir die Augen beide,9 bars,"""5/4""",3+2?,Mässig bewegt,
 "Scriabin, Alexander",4 Preludes,1903,op.33 no.4,4,,"""5/4""",?,"Ardito, bellicoso, [C]=152-160",
 "Ravel, Maurice",Miroirs,1904–05,,"Movt 5: “La vallée des cloches""",b.20-27,"""5/4""",?,"Très lent, [C]=50","Also short passagesof mixed metre in movt 1, Noctuelles"
@@ -106,7 +106,7 @@ Haydn (attrib.),Piano Sonata No.12,1767?,Hob.XVI:12,Movt 3 (Finale),,"""2/4"" (7
 "Ravel, Maurice",Frontispiece for two pianos,1918,,,,"""5/4"" and ""15/8"" (triplets)",?,[DC]=118,Numerology?
 "Holst, Gustav",The Perfect Fool,1918–22,op.39,Dance of spirits of earth (two sections),,"""7/8""",2+2+3,Moderato,
 "Vladigerov, Pancho","Bulgarian Rhapsody, ‘Vardar’","1922, 28",op.16,,"Start - Fig.3, Fig.22-26","""5/16""",2+3,[SQ]=160,
-"Stravinsky, Igor",Octet for winds,"1923, 52",,"Movt. 2, Variation E (Fig. 51-6)",,"""5/8""",,,Two bars of exceptions.
+"Stravinsky, Igor",Octet for winds,"1923, 52",,"Movt 2, Variation E (Fig. 51-6)",,"""5/8""",,,Two bars of exceptions.
 "Bartók, Béla",Mikrokosmos,1926-39,"Sz.107, BB 105",20(67),,8/8,"""3+3+2""",,
 "Bartók, Béla",Mikrokosmos,1926-39,"Sz.107, BB 105",31(97),,"""7/8"" (actually 7/4)",2+3+2,,
 "Bartók, Béla",Mikrokosmos,1926-39,"Sz.107, BB 105",32(98),,"""7/8""",2+2+3,,
@@ -152,7 +152,7 @@ David Diamond,Sonata for violoncello and piano,1936-8,,"Movt 2, Lento Assai",b.1
 "Roslavets, Nikolai",24 Preludes for violin and piano,1941–42,,Movt 9,,"""5/8""",3+2,Presto,
 "Roslavets, Nikolai",24 Preludes for violin and piano,1941–42,,Movt 19,,"""4/8+3/8""",2+2+3,Moderato scherzando,
 "Schoeck, Othmar",Unter Sternen (Under the Stars),1941-43,op.55,Trost der Kreatur (Heft 1),b.2ff.,"""3/4+2/4"" [8/4]",3+3+2,Ruhig,
-"Prokofiev, Sergey",Piano Sonata No. 7,1942,op.83,"Movt. 3 (""Precipitato"")",,"""7/8""",2+3+2,Precipitato,
+"Prokofiev, Sergey",Piano Sonata No. 7,1942,op.83,"Movt 3 (""Precipitato"")",,"""7/8""",2+3+2,Precipitato,
 "Hindemith, Paul",Ludus Tonalis,1942,,Preludium last 8 measures [= Postludium first 4],,"""15/8""",,"Solenne, broad [DC]=50-54",
 "Hindemith, Paul",Ludus Tonalis,1942,,Movt 4: Fugue Secunda in G,,"""5/8""",Both 2+3 and 3+2,[Q]=200,
 "Piston, Walter",Passacaglia for piano,1943,,,,"""5/8""",3+2,Andantino [Q]=72,
