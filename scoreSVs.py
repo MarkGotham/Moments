@@ -59,16 +59,27 @@ class TableEntry(object):
     '''
     Defines the data to be retrieved, stored, and assessed for each chord 'slice':
 
-    measure = measure number in the piece overall, starting with 1, or 0 in the cases of incomplete first measures;
-    beat = the beat in the measure always starting with 1 (NB not 0), whatever the time signature);
-    beatStrength = a simplified metric for the 'importance' of a position in the measure;
-    length = how long the slice lasts, measured in 'quarterLength' (how many quarter notes - can be a fraction);
-    pitches = each pitch (with octave) in the chord, working from lowest to highest;
-    intervals = the intervals between each pair of pitches in the chord;
-    primeForm and normalOrder = music theoretic representations of 'distinct' chord types.
+    offset:
+        time elasped since the start of the piece as measures in the symbolic 'quarter length'
+        equivalent to the sum of the legth columns to this point (i.e. combined duration of previous slices);
+    measure:
+        measure number in the piece overall, starting with 1, or 0 in the cases of incomplete first measures;
+    beat:
+        the beat in the measure always starting with 1 (NB not 0), whatever the time signature);
+    beatStrength:
+        a simply metric for the 'importance' of a position in the measure;
+    length:
+        how long the slice lasts, measured in 'quarterLength' (how many quarter notes - can be a fraction);
+    pitches:
+        each pitch (with octave) in the chord, working from lowest to highest;
+    intervals:
+        the intervals between each pair of pitches in the chord;
+    primeForm and normalOrder:
+        music theoretic representations of 'distinct' chord types.
     '''
 
     def __init__(self):
+        self.uniqueOffsetID = None
         self.measure = None
         self.beat = None
         self.beatStrength = None
@@ -88,11 +99,44 @@ class ScoreInfoSV:
     Optionally: exporting to a separated values file.
     '''
 
+    def __init__(self, scoreOrPath):
 
-    def __init__(self, score):
-        self.score = score
+        self.scoreOrPath = scoreOrPath
+        self._getScore()
         self.extractData()
 
+    def _getScore(self):
+        '''
+        Handles input options for score, either:
+            a score in a recognised format (e.g. musicxml), or
+            a tabular file (.tsv or .csv) having handled the slicing in advance.
+        Then calls _removeGraceNotes and finally
+        converts any transposed parts to sounging pitch ('score in C').
+        '''
+
+        if type(self.scoreOrPath) is stream.Score:
+            self.initalParse = self.scoreOrPath
+
+        elif type(self.scoreOrPath) is str:
+            self.initalParse = converter.parse(self.scoreOrPath)
+
+        self._removeGraceNotes()
+        self.score = self.initalParse.toSoundingPitch()
+
+    def _removeGraceNotes(self):
+        '''
+        Removes all grace notes in the score.
+        They are of relatively low importance and
+        can cause disproportionate problems when processing.
+        '''
+
+        notesToRemove = []
+        for n in self.initalParse.recurse().notes:
+            if n.duration.isGrace:
+                notesToRemove.append(n)
+
+        for n in notesToRemove:
+            n.activeSite.remove(n)
 
     def extractData(self):
         '''
@@ -109,10 +153,11 @@ class ScoreInfoSV:
 
                 thisEntry = TableEntry()
 
+                thisEntry.uniqueOffsetID = round(x.activeSite.offset + x.offset, 2)
                 thisEntry.measure = int(x.measureNumber)
-                thisEntry.beat = round((x.beat), 2)
+                thisEntry.beat = round(float(x.beat), 2)
                 thisEntry.beatStrength = x.beatStrength
-                thisEntry.length = float(x.quarterLength)
+                thisEntry.length = round(float(x.quarterLength), 2)
 
                 if 'Chord' in x.classes:  # Attributes in chord, but not rest
                     thisEntry.pitches = list(dict.fromkeys([p.nameWithOctave for p in x.pitches]))
@@ -141,7 +186,11 @@ class ScoreInfoSV:
             self.svFileName = svFileName
 
 
-    def makeSV(self, svFilePath=None, svFileName=None, delimiter='\t'):
+    def makeSV(self,
+               svFilePath: str = '',
+               svFileName: str = '',
+               delimiter='\t',
+               headers: bool = False):
         '''
         Writes the separated values file (TSV by default).
         '''
@@ -168,15 +217,30 @@ class ScoreInfoSV:
             svOut = csv.writer(svfile, delimiter=delimiter,
                                 quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
+            if headers:
+                headers = ['Offset',
+                            'Measure',
+                            'Beat',
+                            'Beat Strength',
+                            'Length',
+                            'Pitches',
+                            'Intervals',
+                            'Prime Form',
+                            'Normal Order',
+                            ]
+                svOut.writerow(headers)
+
             for entry in self.data:
-                svOut.writerow([entry.measure,
+                svOut.writerow([entry.uniqueOffsetID,
+                                entry.measure,
                                 entry.beat,
                                 entry.beatStrength,
                                 entry.length,
                                 entry.pitches,
                                 entry.intervals,
                                 entry.primeForm,
-                                entry.normalOrder,])
+                                entry.normalOrder,
+                                ])
 
 
 # ------------------------------------------------------------------------------
@@ -189,6 +253,7 @@ class SVInfo:
 
     def __init__(self, svPath):
 
+        self.svPathFullPath = svPath
         self.inPath, self.fileName = os.path.split(svPath)
 
         self.parseSV()
@@ -200,23 +265,22 @@ class SVInfo:
         Parses an SV file.
         '''
 
-        file = f'{self.inPath}/{self.fileName}'
-
-        f = open(file, 'r')
+        f = open(self.svPathFullPath, 'r')
 
         self.data = []
 
         for row_num, line in enumerate(f):
             values = line.split('\t')
             thisEntry = TableEntry()
-            thisEntry.measure = int(values[0])
-            thisEntry.beat = strToFloat(values[1])
-            thisEntry.beatStrength = float(values[2])  # Shouldn't need strToFloat() here
-            thisEntry.length = strToFloat(values[3])
-            thisEntry.pitches = values[4][2:-2].split('\', \'')
-            thisEntry.intervals = values[5][2:-2].split('\', \'')
-            thisEntry.primeForm = values[6]  # TODO: leave as is?
-            thisEntry.normalOrder = values[7][:-1]
+            thisEntry.uniqueOffsetID = float(values[0])
+            thisEntry.measure = int(values[1])
+            thisEntry.beat = strToFloat(values[2])
+            thisEntry.beatStrength = float(values[3])  # Shouldn't need strToFloat
+            thisEntry.length = strToFloat(values[4])
+            thisEntry.pitches = values[5][2:-2].split('\', \'')
+            thisEntry.intervals = values[6][2:-2].split('\', \'')
+            thisEntry.primeForm = values[7]  # TODO: leave as is?
+            thisEntry.normalOrder = values[8][:-1]
 
             self.data.append(thisEntry)
 
